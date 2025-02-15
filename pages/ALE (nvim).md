@@ -1,0 +1,2 @@
+- link::https://github.com/dense-analysis/ale
+- Asynchronous [[Linting]] Engine for [[nvim]] and [[vim]]
