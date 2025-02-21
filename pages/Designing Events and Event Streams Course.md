@@ -1,0 +1,153 @@
+- Designing [[Events]] and [[Event Streams]] Playlist by [[Confluent]]
+	- [[Event Driven Architecture]]
+	- Playlist link:
+	  {{video https://www.youtube.com/playlist?list=PLa7VYi0yPIH145SVtPoh3Efv8xZ1ehUYy}}
+	- Priors:
+		- Want to learn about [[Event Streams]] in practice, since it seems like a really practical and stable way to do [[scalable]] and [[reproducible research]].
+		- Somewhat concerned that this playlist is a walkthrough in [[Apache Kafka]], which has a reputation for being difficult. When I do an actual build, I've been thinking about [[ZeroMQ]] or maybe even one of the R-native packages like [[{txtq}]] or [[{liteq}]]
+		- It really seems like there's a natural connection to [[Domain Driven Design]]'s [[Event Storming]] and the [[Event Driven Architecture]].
+			- The name connection is obvious, but more than that, the value of [[event storming]] is in that you're documenting the events that are happening in a system, and identifying the [[dependencies]] and [[data flows]].
+			- When you have those interactions defined, it helps inform how to design a system that can facilitate them.
+	- ### Module 1: Fact vs. Delta Event Types
+		- [Video Link](https://www.youtube.com/watch?v=vZ2mWLJdRaA&list=PLa7VYi0yPIH145SVtPoh3Efv8xZ1ehUYy&index=3)
+		- [[Fact Event]] vs [[Delta Event]] types
+		- [[Fact Event]] Completely describes the event, at point in time
+			- Comparable to row in a [[database]]
+			- Captures complete state
+		- [[Delta Event]] captures changes from one state to another
+			- Contents can vary widely, but should include
+				- What has changed
+				- Reason for change
+				- NOT: anything that has not changed
+		- #### [[Fact Event]]
+			- Using [[fact event]] over [[delta event]] provides an effective way to transfer state
+				- #pattern [[event-carried state transfer]]
+				- Effectively, provides broadcast of immutable state to all relevant parties, who do not need to build their own representation of your state
+			- [[Fact Event]] also good for representing measurements (physical/[[Internet Of Things]]) or other... facts.
+			- [[Fact Event]]s may have full copy of the state before/after change
+				- allows for diffing
+				- Makes for big objects, but allows consumers to react to simple changes without storing state on their end
+					- could be used to trigger events
+			- Big events
+				- May be order of magnitude bigger than [[Delta Event]]
+			- Need to account for update frequency
+				- Large events, with frequent updates, have big overhead costs
+				- Need to consider [[timeliness]] of data
+			- Does NOT communicate intent
+				- Opaque
+				- Users can _infer_ causal effects for changes, but they only actually have immutable state.
+		- #### [[Delta Event]]
+			- Exposing changes within the system, on the outside.
+			- Can have different event types
+			- Good at capturing intent behind creation, and provide context
+			- [[Event Sourcing]]
+				- Read event stream, and build state in system (table)
+				- Do not share event sourcing events outside of system
+					- consumers need to maintain own state, including current (or relevant past) logic
+			- [[CQRS]]
+		- Concern about overly specific facts and deltas
+			- [[Event Model Sprawl]] relevant for [[Fact Event]]
+				- Consumer may request adding more information about fact
+				- Limit fields to what this service owns, not including from others
+			- [[Custom Triggered Events]] concern for [[Delta Event]]
+				- Having events fire upon (overly) specific criteria
+				- Decouples business logic for trigger, and result (couples services)
+					- Trigger code lives in producer, result code lives in consumer
+		- [[Composite Event]]: Combination of [[Fact Event]] and [[Delta Event]]
+			- Like a fact event, but with context/reason for the event being fired (can also include before/after data)
+			- Alternately, like a delta event, but with some stateful facts about the entity that aren't changing in the delta (after the event was applied)
+	- ### Module 2: Normalization vs. Denormalization
+		- [Video Link](https://www.youtube.com/watch?v=sDU94hraq8g&list=PLa7VYi0yPIH145SVtPoh3Efv8xZ1ehUYy&index=5)
+		- Ensure all necessary data in an event
+		- Related to the difference between [[RDBMS]] and [[Document Databases]] [[Normalization]] question
+		- Normalized Event streams that are based on the internal normalized tables can cause coupling to internal implementations
+		- Joins are more expensive in event streaming than in stateful databases
+			- require persisting state again elsewhere
+		- Denormalizing
+			- Option 1: Denormalize at event creation, as it's leaving the system boundary
+			- Option 2: Denormalize after system boundry, but before consumer
+		- Creating an [[abstraction layer]] decouples producer's internal model from what the consumers will see
+		- Data is sometimes inherently normalized (if streams are published by different systems)
+		- If data is denormalized prior to emitting events, then that can lead to a large amount of events if a field from a [[foreign key]] needs to be updated
+	- ### Module 3: Single vs. Multiple Event Streams
+		- [Video Link](https://www.youtube.com/watch?v=xkV2pC21DBQ&list=PLa7VYi0yPIH145SVtPoh3Efv8xZ1ehUYy&index=7)
+		- Is it better to publish different event types in one stream, or publish multiple streams (per event type)?
+			- Determined by consumer use case
+		- Events are written once, but may be read multiple times
+			- New or existing consumers
+		- [[Delta Event]] streams make sense as per-type streams, since they can be used for alerting, and consumers ccan subsribe to only streams they care about
+		- Introduces risk that events may be read and processed out of order
+			- Out-of-order is always a risk, all technologies make at best a best-effort attempt at ordering
+		- It may be better to use a single stream with multiple event types, to control ordering
+			- [[Apache Kafka]] only guarantees order of a stream within a [[partition]]
+			- Requires that all events are written by a single producer, which needs strict control over ordering and placement of events
+			- Consumers must be able to handle all event types in the stream
+				- Or filter events they don't care about
+				- Can introduce strong coupling between producer and consumers
+				- New types, or changes to existing need to be negotiated between consumers and producers
+				- [[ksqlDB]] can also split a stream by type
+		- [[Fact Event]]s offer looser coupling
+			- transfer read-only state effectively
+		- [[Best Practice]]: Give initial event a unique ID, and propagate to any derived events
+		- [[Best Practice]]: Use single stream for single event type
+	- ### Module 4: Terminating vs. Non-Terminating Entities
+		- [Video Link](https://www.youtube.com/watch?v=jKqGTONMaXE&list=PLa7VYi0yPIH145SVtPoh3Efv8xZ1ehUYy&index=9)
+		- Modeling as discrete and continuous event flows
+		- [[Discrete Event Flow]] models changes in state, until either completion or abandonment
+			- Example: Shipping an order, taking a trip
+			- Events change the state of the system
+				- (order event) -> "Ordered" -> (payment event) -> "Paid" -> (shipping event) -> "Shipped"
+			- May have multiple valid start/stop states
+			- Often tracking multiple independent state machines simultaneously ([[parallelization]])
+			- Cannot tolerate message loss/duplication
+		- [[Continuous Event Flow]] models a series of independent events
+			- Ex: metrics, measurements, sensor readings
+			- Often used for analytics
+			- Often robust to occasional dropped or duplicate events
+		- [[Continuous Event Flow]] often simpler than [[Discrete Event Flow]] because there isn't a need to track state in consuming applications
+		- Some consumers may ingest [[Fact Event]]s  as [[Continuous Event Flow]], and use them to power their own [[Discrete Event Flow]] (internally)
+	- ### Module 5: Event Design and Event Streams Best Practices
+		- Event [[Schemas]]
+			- Provide structure and definition for event
+			- Ensure agreement between producer and consumer
+			- Enable code generation
+			- Schema enables evolution across time, as needs change
+			- Examples:
+				- [[Apache Avro]]
+				- [[Protobuf]]
+				- [[JSON Schema]]
+		- Standard [[Headers]] and [[Metadata]]
+			- [[Best Practice]]: Use a key with a primitive value for partitioning
+			- Consumers also have access to metadata (from event broker)
+				- Topic, offset, timestamp, etc
+			- Can also have Record Headers
+				- Allow for context & metadata about event, without overloading Key or Value (content of message)
+				- Can be useful to use Standardized headers
+		- Naming
+			- Events come from multiple areas
+			- Embedding context in event naming can help with management and discovery
+			- Options:
+				- `<domain>.<event_type>.<version>`
+					- `Orders.order.v1`
+					- `Customers.Advertisement.v2`
+				- `<domain>.<service>.<event_type>.<version>`
+					- `Customers.Ad_manager.Advertisement.v2`
+					- Service may change over time
+					- Makes sense for internal event streams, rather than external-facing ones
+				- Use option 1, but put an `origin:` header in the event
+		- Event IDs
+			- Allow for uniquely identifying a single event
+			- Auditing events
+				- Compare events written to a stream, with events read on the other side
+			- Use an auto-incrementing ID to help ensure ordering
+			- Options:
+				- `hash(event_as_bytes)`
+					- hashing functions can provide good guarantee of uniqueness, but do not help with ordering
+				- `<service>.<type>.<entity-id>.<sequence-id>`
+					- Example Fact Event ID: `Shop.Cart.321123.2`
+			- Using Event IDs is not mandatory, but is a [[Best Practice]]
+				- Do not require much effort to implement
+				- Allow for easy de-duplication or reordering
+				- Implement Early, because changing later is hard
+	- Suggested Followup: [[Event Sourcing and Event Storage with Apache Kafka Course]]
+	-

@@ -1,0 +1,59 @@
+- [[Event-Driven Architecture]]
+- {{video https://www.youtube.com/watch?v=ksRCq0BJef8}}
+- [[Microservices]] are independently maintained, deployable, testable
+	- People tend to build [[REST]] interfaces
+		- ads to long latency when calls are chained
+- [[Event Driven Architecture]] is different than [[Data Driven]]
+	- Data Driven is centered around data at rest, Event driven is around data in flight
+	- Event log as source of truth, rather than data store
+- Messaging Infrastructure ([[Event Broker]]) is the backbone of the application
+- [[Messaging Patterns]]
+	- [[Point-to-point]]
+		- Producers put messages into a queue, each message is picked up by a single consumer
+			- Possibly load balanced
+	- [[Publish/Subscribe]]
+		- Producers put messages into a topic, which may have one or more subscriptions, which may go to one or more consumers
+		- Popular software: [[Apache Kafka]]
+			- handles streams well
+			- Connectors to existing systems
+- Execution rate of services can be different
+	- Consumers do not affect producers
+- [[Event Broker]] (Backbone)
+	- Event Sources
+		- Capture business events
+	- Stream Processing
+		- (generally) self-contained application that respond to events as they come
+	- Event Archive
+		- Durable log of events as a long-term data store
+	- Notification
+		- Subscription to topic can trigger notification to user
+- What should the events be?
+	- [[Event Storming]] can identify!
+		- Identify: Events, Actors, Data, Commands
+- [[REST]] [[API]] is useful for human interaction
+- Patterns:
+	- [[Database per Service]]
+		- Each service manages its own data
+		- Technology doesn't matter
+			- RDBMS, NoSQL, In-memory table, whatever
+	- [[Saga]]
+		- Helps ensure consistency between services
+		- Topic Partitions grow without limit
+			- Can be [compacted]([[log compaction]]) (keep only latest keys)
+		- Saga is orchestration of multi-step operations
+			- Defines interactions between services
+			- Failure handling can be complicated
+	- [[Event Sourcing]]
+		- have an evolving log of all events which can be replayed
+		- grows without limit
+			- Checkpointing ([[log compaction]]) vs [[audit log]]
+		- Publishing an event is an atomic action
+			- Consuming an event is [[idempotent]]
+		- partitioning needs to preserve event ordering ([[total order broadcast]])
+	- [[CQRS]]
+		- Difficult in practice
+		- Split a write-optimized store and a read-optimized store, and use events to connect them
+		- read-optimized is often an [[analytics]] application
+- Summary
+	- Event-driven microservices offer a way to build loosely coupled applications
+	- Event sourcing an Sagas make complexity manageable

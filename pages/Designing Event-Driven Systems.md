@@ -1,0 +1,3 @@
+- [[Book]] by [[Ben Stopford]]
+- https://www.confluent.io/resources/ebook/designing-event-driven-systems/
+-

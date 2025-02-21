@@ -1,0 +1,93 @@
+- Playlist: {{video https://www.youtube.com/playlist?list=PLa7VYi0yPIH1TXGUoSUqXgPMD2SQXEXxj}}
+- [[Event Sourcing]] 101
+	- Presented by [[Anna McDonald]] from [[Confluent]]
+	- Course covers [[Event Sourcing]] and [[Event Storage]] with [[Apache Kafka]]
+	- Intro:
+		- Events are immutable
+		- information is stored with finer granularity
+		- A record exist of what originally happened
+		- Events can rewind in time and recover
+		- Course covers What, Why, and How in Event sourcing
+- ## Module 1: Thinking in Events
+	- [Video Link](https://www.youtube.com/watch?v=EvIg6buGo9k&list=PLa7VYi0yPIH1TXGUoSUqXgPMD2SQXEXxj&index=2)
+	- Course accompanies book [[Designing Event-Driven Systems]] by Ben Stopford
+	- Software models a real-world system
+		- Translate a model into a coordinate system (ex. Cartesian vs Polar)
+		- Choice of coordinates makes some problems easier
+		- In software, the "coordinate systems" are [[state-based]] and [[event-based]]
+- ## Module 2: Storing Data as Events
+	- [Video Link](https://www.youtube.com/watch?v=tIDqyrYscgk&list=PLa7VYi0yPIH1TXGUoSUqXgPMD2SQXEXxj&index=3)
+	- [[CRUD]] operations are used in [[RDBMS]]
+		- [[Event Sourcing]] covers "Create" and "Read"
+		- Has No destructive methods (but can have compensatory ones)
+	- Event sourcing is not great at finding instant state
+		- Must read all relevant events, and transform them into an in-memory state
+	- Event sourcing can go to Table form, but not vice-versa
+	- Process:
+		- Store events in a stream (in DB, or [[Apache Kafka]] )
+		- Query Events, and return a set of ordered events
+			- Generally filtered by some metadata ID (Customer, Session, Cart, etc.)
+		- Summarize / Reduce
+- ## Module 3: Why Store Events?
+	- [Video Link](https://www.youtube.com/watch?v=x6Xr71feSiY&list=PLa7VYi0yPIH1TXGUoSUqXgPMD2SQXEXxj&index=4)
+	- Why is [[Event Sourcing]] better than traditional [[RDBMS]]?
+	- #+BEGIN_QUOTE
+	   Events are Evidentiary
+	  #+END_QUOTE
+		- Immutable, never deleted
+		- Allows retrospection (looking back in time)
+		- Comparable to double-entry bookkeeping
+	- Replayable
+		- Recoverability
+		- Allows for recovery of system _after_ resolution of an issue
+			- Replay from known good state with fixed software
+	- Insightful
+		- Detailed data can be fed into analytics
+		- Allows for tracking of journies/processes, not just state
+- ## Module 4: [[Command Query Responsibility Segregation]]
+	- [Video Link](https://www.youtube.com/watch?v=lg6aF5PP4Tc&list=PLa7VYi0yPIH1TXGUoSUqXgPMD2SQXEXxj&index=5)
+	- Reading Data in an [[Event-Driven Architecture]] has additional steps
+		- Needs to be queried and reduced (processed) to expose state information (at a given point in time)
+	- Large event logs can cause long computation time on the reduce steps
+	- Possible solution: Perform computation at write-time, rather than on-read
+	- [[CQRS]] implementations always have two sides: "Write" and "Read"
+		- Write side: Send events which are durably stored
+		- Read side: Translate events into a table
+			- Happens at write-time, but asynchronously
+	- Advantages
+		- Detailed Event-level storage
+		- Good performance, since Read and Write systems are decoupled
+	- Disadvantages
+		- [[Eventual consistency]]
+			- Reads may not be immediately accurate
+		- More systems to maintain/run
+	- [[Event log]] is the system of record
+	- This is effectively a [[Materialized View]] of the [[log compaction]] that is regularly updated
+- ## Module 5: Incorporating Event Storage into your System
+	- [Video Link](https://www.youtube.com/watch?v=ds0SgB4jG_s&list=PLa7VYi0yPIH1TXGUoSUqXgPMD2SQXEXxj&index=7)
+	- What's the catch?
+		- [[Event Sourcing]] is harder to implement than [[state-based]] systems
+	- [[CQRS]] has more at least on moving parts than [[state-based]] systems
+		- The [[Event Broker]] is a necessary intermediary
+		- So in state-based, it can just be the Application and the Data Store (even in-mem)
+		- But in CQRS, it's the Application, the [[Event log]] (acting as data store) and the Read/query mechanism
+	- Applications evolve, and [[data schema]] change, so events will have different formats over time
+		- Different parsing code must be maintained to handle different data schema
+	- [[Eventual consistency]]
+		- Reading own writes is not gauranteed
+	- [[Change Data Capture]] grants a lot of the same benefits of events
+		- Connectors can effectively turn changes in a traditional [[RDBMS]] into events
+		- Outbox pattern uses [[database triggers]] or the application writes to an "events" table when making [[CRUD]] opperations
+		- Some DBs May use [[Write-Ahead Log]] for example
+- ## Module 6: Event Sourcing vs. Event Streaming
+	- [Video Link](https://www.youtube.com/watch?v=I3Mlt7GCeIU&list=PLa7VYi0yPIH1TXGUoSUqXgPMD2SQXEXxj&index=8)
+	- Shift from [[data-at-rest]] to [[data-in-motion]]
+	- Read-Heavy application example: Flight bookings
+		- Reads 10K x more than writes
+		- Global userbase
+		- Consistency only required upon booking
+	- Over internet, users will never see totally consistent data with application
+		- Browser caching, [[CDNs]], etc
+	- [[Event Streaming]] includes [[Event Sourcing]], but add connectivity
+		- [[data-in-motion]] (streaming) vs [[data-at-rest]] (sourcing)
+	- Storing Event data is not obligatory, but useful because it cannot be derived after the fact.
