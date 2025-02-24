@@ -1,9 +1,9 @@
 @font-face {
-  font-family: "Atkinson Hyperlegible Next";
+  font-family: "JetBrains Mono Nerd";
   font-weight: 200 900;
   font-style: normal;
   font-stretch: normal;
-  src: url('https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:ital,wght@0,200..800;1,200..800&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400;1,700&display=swap');
+  src: url("https://github.com/ryanoasis/nerd-fonts/raw/master/patched-fonts/JetBrainsMono/Ligatures/Regular/complete/JetBrains%20Mono%20Regular%20Nerd%20Font%20Complete.ttf");
 }
 :root {
   --ct-text-size: 14px;
