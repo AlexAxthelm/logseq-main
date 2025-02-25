@@ -1,6 +1,6 @@
 - Playlist: {{video https://www.youtube.com/playlist?list=PLa7VYi0yPIH1TXGUoSUqXgPMD2SQXEXxj}}
 - [[Event Sourcing]] 101
-	- Presented by [[Anna McDonald]] from [[Confluent]]
+	- Presented by [[Person/Anna McDonald]] from [[Confluent]]
 	- Course covers [[Event Sourcing]] and [[Event Storage]] with [[Apache Kafka]]
 	- Intro:
 		- Events are immutable

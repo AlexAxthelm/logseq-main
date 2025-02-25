@@ -1,0 +1,85 @@
+- Video Link: {{video https://www.youtube.com/watch?v=STKCRSUsyP0}}
+- The Many Meanings of [[Event-Driven Architecture]] by [[Person/Martin Fowler]]
+- at [[goto; conference]] Chicago [2017](Year 2017)
+- What do people mean by [[Event-Driven Architecture]]?
+- Identified common patterns in event-driven systems
+- Four different patterns that fall under the term "event-driven" system
+	- Systems have at least one, sometimes all four
+- ## Pattern 1: [[Event Notification]]
+	- change in data triggers system to update other parts of system
+	- creates [[dependency]] between parts of system
+	- [[Event Notification]] reverses the dependency by having the "triggering" system emit an event that the responding system can listen for
+	- Allows the triggering/producing system to be agnostic of the downstream one
+	- Also common in [[GUI]]s and the rest of code
+		- Text box creates an event, that the code can respond to
+	- Encapsulates all data about the change
+		- make the change a first-class entity
+		- Makes a record of the change
+	- Events vs. Commands
+		- Subtle difference, but important
+		- System issuing an event could be issuing a command or an event
+			- "issue new quote for this customer"
+			- "customer has changed address", which implies that a new quote is needed
+		- this is a [[Naming Things]] problem
+		- Commands are "insisting"
+			- passive-aggressive events
+	- Events allow many downstream systems to be hooked up without changes to upstream dependencies
+	- Disadvantage: No statement of overall behavior
+		- System is decoupled, and overall state is difficult to reconstruct
+		- step-through in [[debugger]] may be only good way to [[debug]] issues
+	- [[Event Notification]] is common; calling it "Event-driven" implies that it's a particularly important part of the architecture
+- ## Pattern 2: [[event-carried state transfer]]
+	- Minor variation of [[Event Notification]]
+		- Event Notification (on its own) often involves additional traffic, as the downstream system needs to query the upstream one for more relevant details
+		- Can put more relevant information in the event to reduce inter-service traffice
+	- Alternate to [[REST]]
+	- Upstream system needs to broadcast all state information that is relevant for downstream systems
+	- Advantage: Do not need to call back to upstream system
+	- Disadvantage: [Higher availability](replication) comes at the [cost of consistency](eventual consistency)
+- ## Pattern 3: [[Event Sourcing]]
+	- Create event object in a [separate storage area](event log)
+	- Creates 2 representations of the world:
+		- [[Application State]] vs [[Event log]]
+	- True test of [[Event Sourcing]] is the ability to destroy [[Application State]] completely, and recreate it from the [[Event log]]
+	- Preserving the state is less important
+	- [[git]] (and other [[Version Control System]]s) is an example of an [[Event Sourcing]] system
+	- May have snapshots for performance reasons ([[log compaction]])
+	- Accounting Ledgers are another example of [[Event Sourcing]]
+	- Allows for:
+		- Audit
+		- Debugging
+		- Alternative State
+		- [[Memory Image]]
+			- Do not need to store application state in a durable system
+			- Can play from log, and keep everything [[in-memory]]
+			- Can have high-performance, low latency
+			- Allow [[Hot Backups]]
+			- Do not need to deal with database
+			- Still need persistent store, for event log
+	- Disadvantages
+		- Unfamiliar model for a lot of developers
+		- Communication with external systems is difficult
+		- Need to have a documented [[Event Schema]]
+		- [[Identifiers]] need to be created deterministically (replayable)
+		- Inherently [[Asynchronous]]
+			- Need to keep read and write models in sync
+		- Versioning gets tricky as system evolves
+			- Ability to replay events is critical
+			- Mentioned [[Book/Versioning in an Event Sourced System]] by [[Person/Greg Young]]
+		- Can track changes, but lose intent
+			- VCS example: keep text changes, but lose the intent of "refactor"
+			- Need to consider what events you want to capture, and which are okay to lose
+			- #+BEGIN_QUOTE
+			  Don't have any business logic between event and storage
+			  #+END_QUOTE
+				- If you do, you get into a tangled versioning mess
+				- Could store both internal and external events
+- ## Pattern 4: [[Command Query Responsibility Segregation]] (CQRS)
+	- Separate components that read and write to permanant storage
+	- [[Command Model]] is responsible for UPDATEs ([[CRUD]] model)
+	- [[Query Model]] is responsible for all READs (most activity)
+	- Allows for a lot of complicated business logic in Write model, and simple read (fast reads)
+	- Should be wary of using this model
+		- People get in trouble with this model
+		- "Should be pretty deep in the tool box"
+	- Different than [[OLTP]] vs [[OLAP]] (Operational vs analytics) systems

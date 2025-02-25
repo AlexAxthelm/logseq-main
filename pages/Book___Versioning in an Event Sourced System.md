@@ -1,0 +1,2 @@
+- By [[Person/Greg Young]]
+- https://leanpub.com/esversioning

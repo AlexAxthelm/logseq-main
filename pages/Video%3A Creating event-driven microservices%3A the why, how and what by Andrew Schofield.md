@@ -11,7 +11,7 @@
 	- [[Point-to-point]]
 		- Producers put messages into a queue, each message is picked up by a single consumer
 			- Possibly load balanced
-	- [[Publish/Subscribe]]
+	- [[PubSub]]
 		- Producers put messages into a topic, which may have one or more subscriptions, which may go to one or more consumers
 		- Popular software: [[Apache Kafka]]
 			- handles streams well

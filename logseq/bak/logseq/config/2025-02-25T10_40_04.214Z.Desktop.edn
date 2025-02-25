@@ -420,5 +420,11 @@
  ;;      ;use Percent-encoding for other invalid characters
  :file/name-format :triple-lowbar
  :graph/settings {:builtin-pages? false
- :journal? true}
- :graph/forcesettings {:charge-range 1800}}
+ :journal? true
+ :orphan-pages? true}
+ :graph/forcesettings {:charge-range 800
+ :charge-strength -800
+ :link-dist 40}
+ :ui/show-brackets? false
+ :feature/enable-flashcards? false
+ :feature/enable-whiteboards? false}

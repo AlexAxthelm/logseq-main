@@ -8,13 +8,3 @@
 .monospace {
   font-family: 'Atkinson Hyperlegible Mono', monospace;
 }
-
-body {
- font-family: sansserif, sans-serif;
-}
-
-:not(pre)>code,
-.CodeMirror {
-	font-family: monospace;
-	font-feature-settings: normal;
-}
