@@ -1,0 +1,32 @@
+- This is my first time vibecoding
+	- By this I mean letting an LLM handle most of the work of actually editing code files, rather than making (autocompletion) suggestions
+		- I've previously used [[GitHub Copilot]] and [[TabNine]] models as completion sources in [[nvim]], but at most they did block-level suggestions, rather than creating full functions or whole files
+	- For this trial, I developed a game, written in [[R]] (with [[shiny]] as the frontend) called `rattleship`, a fairly basic game like battleship, but with a few complications:
+		- The number of guesses in salvo is equal to the number of ships remaining (makes the game more difficult as it progresses)
+		- The regression line of guesses, and 95% Confidence interval of that regression are shown, and when guessing, the user gets feedback if the true regression line of the ship is within the CI.
+	- Part 1: Initial Development
+		- For the initial development, I took a mostly hands-off approach to coding, treating the LLM (Claude 3.5 via Copilot) as a very-available junior developer
+			- Gave requirements as I discovered or thought of them, but generally left implementation details up to the LLM
+			- It wrote an entirely reasonable, basic shiny application.
+				- Observation: the code that the LLM generated is very much not the way that I would have written it, but it's fine as a first pass, and got to a working system much more quickly than I would have if I'd been hands-on-keyboard, rather than letting the LLM do the typing.
+		- Having been AFK for the past few months, I've been reading about how people are using LLMs in their dev process, but hadn't actually tried it
+			- I followed the general suggestions that I've seen in keeping the steps relatively small, and committing to `git` when I had something that I liked (or close enough).
+			- In the initial development, I focused on describing new features, or changes to existing ones, and glancing at the implementation, but not worrying too much about the details.
+				- it's really powerful to be able to describe features in natural language, and then a few minutes later have something that works-ish. There's usually some small issues, but the general structure is usually present, and further revision by the LLM can clean things up.
+					- There were a few features where I could have described my vision more clearly, and the LLM built something incorrect, but combining with [[version control]] to revert a change, and then clarifying what needs to be different about the feature yeilded good results.
+				- The code that the LLM produced looks for lack of a better word, "generated".
+					- It reads like python, more than R code (which makes sense given the relative sizes of training data).
+						- Places where R's vectorized nature would make things simple, but it's doing loops, for example
+						- Adding to iterables, rather than pre-allocating when possible
+					- Data structures don't have the elegance that they would if a (moderately skilled) human would have designed them, rather than creating them as needed
+						- lots of individual variables, rather than combining into `data.frame`s
+						- No real consistency in lists vs vectors
+					- Overall, it has the feel of a lot of [[stack overflow]] code snippets assembled until there's a working system, rather than something where there's been an understanding of the system, with a design coming from that.
+				- The speed of the system is a weird effect. Overall it's much faster than writing everytrhing myself, but as part of the initial development, I had situations where I was asking for a small change (that would have taken a few seconds if I'd been writing), but the LLM would take a minute or more.
+					- This is ignoring prompts that timed out, which I dealt with by cancelling, and reducing the scope of changes that I wanted.
+		- Part 2: Refactoring
+			- For this part, I'm taking a more active role as a designer. Having a working system, I want to guide the LLM into a design that is more similar to what I would put into production.
+				- I expect that the major changes that I'll be making include
+					- converting to an R package
+					- breaking out important functionality into actual functions
+					- harmonizing data structures
