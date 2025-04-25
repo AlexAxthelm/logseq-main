@@ -36,3 +36,13 @@
 					- converting to an R package
 					- breaking out important functionality into actual functions
 					- harmonizing data structures
+			- Finding that refactoring the LLM code isn't necessarily more difficult, but the LLM itself isn't helpful in the process, and I'm falling back on my "normal" methods (like `usethis::create_package()` and other `usethis` functions) almost immediately.
+				- Multiple attempts at getting the LLM to adjust files in specific ways were just frustrating. direct editing would have been much faster here
+				- Having a hybrid approach, where I may have the LLM handle some of the grunt-work changes (like namespacing functions), but I can use other tools (like `usethis`) where those are better
+			- LLM helps the refactor cycle quickly: I asked it to pull some components out into a shiny module, and it did so successfully, iterating multiple times when encountering errors or linting notes
+				- Particularly interesting and impressive:
+				  
+				  > There are still some linting warnings about .data in ggplot2 aesthetics, but these can be safely ignored now that we've added rlang to the package dependencies. The warning about sprintf in the sidebar module is a false positive (it thinks we're constructing file paths) and can also be ignored.
+				  
+				  the LLM can detect false positives, or unimportant lints. Not entirely sure how I feel about the machine telling me it can ignore an error, but it does move the process along, and I would probably ignore them too.
+			-
